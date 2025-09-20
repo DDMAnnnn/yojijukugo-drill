@@ -164,56 +164,62 @@ export default function YojijukugoDrill() {
   }
 
   const finished = started && pos >= indices.length && indices.length > 0;
-  const correctCount = results.filter((r) => r.correct).length;
   const total = results.length;
+  const correctCount = useMemo(() => results.filter((r) => r.correct).length, [results]);
+  const incorrectResults = useMemo(
+    () => results.filter((r) => !r.correct),
+    [results],
+  );
   const score = total > 0 ? Math.round((100 * correctCount) / total) : 0;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex justify-center items-center p-6">
-      <div className="w-full max-w-3xl text-center">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold">四字熟語ドリル（読み当て）</h1>
-          <p className="text-sm text-neutral-300 mt-1">
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-4xl">
+        <header className="mb-8 text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">四字熟語ドリル（読み当て）</h1>
+          <p className="text-sm text-neutral-300 mt-2">
             出題範囲（1〜x）から k 個をランダム出題。読み（ひらがな）を完全一致で判定します。
           </p>
         </header>
 
         {/* 設定カード */}
         {!started && (
-          <div className="bg-neutral-900 rounded-2xl p-6 shadow mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <div className="bg-neutral-900/80 backdrop-blur rounded-3xl p-8 shadow-xl border border-neutral-800 mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end text-left">
               <div>
-                <label className="block text-sm text-neutral-300 mb-1">範囲上限 x（1〜{maxN}）</label>
+                <label className="block text-xs uppercase tracking-widest text-neutral-400 mb-2">
+                  範囲上限 x（1〜{maxN}）
+                </label>
                 <input
                   type="number"
                   min={1}
                   max={maxN}
                   value={x}
                   onChange={(e) => setX(Number(e.target.value))}
-                  className="w-full bg-neutral-800 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-neutral-800/70 border border-neutral-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
               <div>
-                <label className="block text-sm text-neutral-300 mb-1">出題数 k</label>
+                <label className="block text-xs uppercase tracking-widest text-neutral-400 mb-2">出題数 k</label>
                 <input
                   type="number"
                   min={1}
                   max={maxN}
                   value={k}
                   onChange={(e) => setK(Number(e.target.value))}
-                  className="w-full bg-neutral-800 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-neutral-800/70 border border-neutral-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
-              <div className="sm:pt-6">
+              <div className="sm:pt-8">
                 <button
                   onClick={startQuiz}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 transition rounded-xl px-4 py-2 font-semibold"
+                  className="w-full bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 transition rounded-xl px-4 py-3 font-semibold shadow"
                 >
                   Start
                 </button>
               </div>
             </div>
-            <p className="text-xs text-neutral-400 mt-3">
+            <p className="text-xs text-neutral-400 mt-6 text-center">
               ヒント：x ≤ {maxN}、k ≤ x に自動調整されます。問題は同じ回で重複しません。
             </p>
           </div>
@@ -221,15 +227,24 @@ export default function YojijukugoDrill() {
 
         {/* 出題ビュー */}
         {started && !finished && current && (
-          <div className="bg-neutral-900 rounded-2xl p-6 shadow mt-4 mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm text-neutral-400">{pos + 1} / {indices.length}</div>
-              <button onClick={resetAll} className="text-sm text-neutral-300 hover:text-white">リセット</button>
+          <div className="bg-neutral-900/80 backdrop-blur rounded-3xl p-8 shadow-xl border border-neutral-800 mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 text-sm text-neutral-400">
+              <div className="flex items-center gap-3">
+                <span className="px-2 py-1 rounded-lg bg-neutral-800 text-neutral-200 font-semibold">
+                  {pos + 1} / {indices.length}
+                </span>
+                <span>現在の問題に集中しましょう！</span>
+              </div>
+              <button onClick={resetAll} className="self-start sm:self-auto text-neutral-300 hover:text-white transition">
+                リセット
+              </button>
             </div>
-            <div className="text-center py-6">
-              <div className="text-4xl sm:text-5xl font-bold tracking-wide">{current.kanji}</div>
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center rounded-2xl border border-neutral-700 bg-neutral-900 px-10 py-6 shadow-inner">
+                <div className="text-4xl sm:text-5xl font-bold tracking-wide text-white drop-shadow">{current.kanji}</div>
+              </div>
             </div>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
               <input
                 ref={inputRef}
                 type="text"
@@ -237,13 +252,13 @@ export default function YojijukugoDrill() {
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 onKeyDown={handleKey}
-                className="w-full bg-neutral-800 rounded-xl px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-neutral-800/70 border border-neutral-700 rounded-xl px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-indigo-400"
                 autoCapitalize="none"
                 autoComplete="off"
               />
               <button
                 onClick={submitOne}
-                className="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 transition rounded-xl px-6 py-3 font-semibold text-white"
+                className="bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 transition rounded-xl px-8 py-3 font-semibold text-white shadow"
               >
                 決定 / Enter
               </button>
@@ -253,43 +268,64 @@ export default function YojijukugoDrill() {
 
         {/* 結果ビュー */}
         {finished && (
-          <div className="bg-neutral-900 rounded-2xl p-6 shadow mt-4 mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">結果</h2>
-              <button onClick={resetAll} className="text-sm text-neutral-300 hover:text-white">もう一度</button>
-            </div>
-            <div className="mb-4">
-              <div className={`text-3xl font-extrabold ${score >= 80 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-red-400"}`}>
-                {score} <span className="text-lg font-semibold text-neutral-200">/ 100 点</span>
+          <div className="bg-neutral-900/80 backdrop-blur rounded-3xl p-8 shadow-xl border border-neutral-800 mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">結果</h2>
+                <p className="text-sm text-neutral-400 mt-1">正解率と回答内容をチェックしましょう。</p>
               </div>
-              <div className="text-neutral-300 mt-1">
-                正解 <span className="font-semibold text-emerald-400">{correctCount}</span>
-                <span className="mx-1 text-neutral-500">/</span>
-                <span className="font-semibold text-neutral-100">{total}</span>
+              <button onClick={resetAll} className="text-sm text-neutral-300 hover:text-white transition">もう一度</button>
+            </div>
+            <div className="mb-6">
+              <div
+                className={`text-4xl font-black tracking-tight ${
+                  score >= 80 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-red-400"
+                }`}
+              >
+                {score}
+                <span className="text-lg font-semibold text-neutral-200 ml-2">/ 100 点</span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div className="rounded-2xl border border-emerald-600/60 bg-emerald-500/10 px-4 py-3 text-center">
+                  <div className="text-xs uppercase tracking-wide text-emerald-300">正解</div>
+                  <div className="text-2xl font-bold text-emerald-400">{correctCount}</div>
                 </div>
+                <div className="rounded-2xl border border-red-600/60 bg-red-500/10 px-4 py-3 text-center">
+                  <div className="text-xs uppercase tracking-wide text-red-300">不正解</div>
+                  <div className="text-2xl font-bold text-red-400">{incorrectResults.length}</div>
+                </div>
+                <div className="rounded-2xl border border-indigo-600/60 bg-indigo-500/10 px-4 py-3 text-center col-span-2 sm:col-span-1">
+                  <div className="text-xs uppercase tracking-wide text-indigo-300">出題数</div>
+                  <div className="text-2xl font-bold text-indigo-200">{total}</div>
+                </div>
+                <div className="rounded-2xl border border-neutral-700 px-4 py-3 text-center col-span-2 sm:col-span-1">
+                  <div className="text-xs uppercase tracking-wide text-neutral-400">正解率</div>
+                  <div className="text-2xl font-bold text-neutral-100">{total ? Math.round((correctCount / total) * 100) : 0}%</div>
+                </div>
+              </div>
             </div>
 
             {/* 間違い一覧 */}
             <div>
-              <h3 className="font-semibold mb-2">間違えた問題</h3>
-              {results.filter((r) => !r.correct).length === 0 ? (
+              <h3 className="font-semibold mb-3 text-lg">間違えた問題</h3>
+              {incorrectResults.length === 0 ? (
                 <p className="text-emerald-400">全問正解！お見事です 🎉</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm mx-auto border border-neutral-800 rounded-xl overflow-hidden">
-                    <thead className="text-left text-neutral-300 bg-neutral-900">
+                <div className="overflow-x-auto rounded-2xl border border-neutral-800">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-neutral-900/80 text-neutral-300">
                       <tr>
-                        <th className="py-2 px-3 border border-neutral-800">漢字</th>
-                        <th className="py-2 px-3 border border-neutral-800">あなたの回答</th>
-                        <th className="py-2 px-3 border border-neutral-800">正しい読み</th>
+                        <th className="py-3 px-4 border-b border-neutral-800">漢字</th>
+                        <th className="py-3 px-4 border-b border-neutral-800">あなたの回答</th>
+                        <th className="py-3 px-4 border-b border-neutral-800">正しい読み</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {results.filter((r) => !r.correct).map((r, i) => (
-                        <tr key={i} className="odd:bg-neutral-950 even:bg-neutral-900">
-                          <td className="py-2 px-3 border border-neutral-800 font-medium">{r.kanji}</td>
-                          <td className="py-2 px-3 border border-neutral-800 text-red-300">{r.answer || "(空)"}</td>
-                          <td className="py-2 px-3 border border-neutral-800 text-emerald-300">{r.expected}</td>
+                      {incorrectResults.map((r, i) => (
+                        <tr key={i} className="odd:bg-neutral-950 even:bg-neutral-900/70">
+                          <td className="py-3 px-4 border-b border-neutral-800 font-medium text-neutral-100">{r.kanji}</td>
+                          <td className="py-3 px-4 border-b border-neutral-800 text-red-300">{r.answer || "(空)"}</td>
+                          <td className="py-3 px-4 border-b border-neutral-800 text-emerald-300">{r.expected}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -299,31 +335,80 @@ export default function YojijukugoDrill() {
             </div>
 
             {/* 全体一覧（任意） */}
-            <details className="mt-5">
-              <summary className="cursor-pointer text-neutral-300">全回答を表示</summary>
-              <div className="overflow-x-auto mt-2">
-                <table className="w-full text-sm mx-auto border border-neutral-800 rounded-xl overflow-hidden">
-                  <thead className="text-left text-neutral-300 bg-neutral-900">
+            <details className="mt-8 group">
+              <summary className="cursor-pointer text-neutral-300 flex items-center gap-2">
+                <span className="group-open:rotate-90 transition-transform">▶</span>
+                <span>全回答を表示</span>
+              </summary>
+              <div className="overflow-x-auto mt-3 rounded-2xl border border-neutral-800">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-neutral-900/80 text-neutral-300">
                     <tr>
-                      <th className="py-2 px-3 border border-neutral-800">#</th>
-                      <th className="py-2 px-3 border border-neutral-800">漢字</th>
-                      <th className="py-2 px-3 border border-neutral-800">あなたの回答</th>
-                      <th className="py-2 px-3 border border-neutral-800">正誤</th>
-                      <th className="py-2 px-3 border border-neutral-800">正しい読み</th>
+                      <th className="py-3 px-4 border-b border-neutral-800">#</th>
+                      <th className="py-3 px-4 border-b border-neutral-800">漢字</th>
+                      <th className="py-3 px-4 border-b border-neutral-800">あなたの回答</th>
+                      <th className="py-3 px-4 border-b border-neutral-800">正誤</th>
+                      <th className="py-3 px-4 border-b border-neutral-800">正しい読み</th>
                     </tr>
                   </thead>
                   <tbody>
                     {results.map((r, i) => (
-                      <tr key={i} className="odd:bg-neutral-950 even:bg-neutral-900">
-                        <td className="py-2 px-3 border border-neutral-800">{i + 1}</td>
-                        <td className="py-2 px-3 border border-neutral-800 font-medium">{r.kanji}</td>
-                        <td className={`py-2 px-3 border border-neutral-800 ${r.correct ? "text-emerald-300" : "text-red-300"}`}>{r.answer || "(空)"}</td>
-                        <td className={`py-2 px-3 border border-neutral-800 font-bold ${r.correct ? "text-emerald-400" : "text-red-400"}`}>{r.correct ? "○" : "×"}</td>
-                        <td className="py-2 px-3 border border-neutral-800">{r.expected}</td>
+                      <tr key={i} className="odd:bg-neutral-950 even:bg-neutral-900/70">
+                        <td className="py-3 px-4 border-b border-neutral-800 text-neutral-400">{i + 1}</td>
+                        <td className="py-3 px-4 border-b border-neutral-800 font-medium text-neutral-100">{r.kanji}</td>
+                        <td
+                          className={`py-3 px-4 border-b border-neutral-800 ${
+                            r.correct ? "text-emerald-300" : "text-red-300"
+                          }`}
+                        >
+                          {r.answer || "(空)"}
+                        </td>
+                        <td
+                          className={`py-3 px-4 border-b border-neutral-800 font-bold ${
+                            r.correct ? "text-emerald-400" : "text-red-400"
+                          }`}
+                        >
+                          {r.correct ? "○" : "×"}
+                        </td>
+                        <td className="py-3 px-4 border-b border-neutral-800 text-neutral-200">{r.expected}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                {results.map((r, i) => (
+                  <div
+                    key={`${r.kanji}-${i}`}
+                    className={`rounded-2xl border px-4 py-3 shadow-sm ${
+                      r.correct
+                        ? "border-emerald-500/60 bg-emerald-500/10"
+                        : "border-red-500/60 bg-red-500/10"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs uppercase tracking-wide text-neutral-400">#{i + 1}</span>
+                      <span
+                        className={`text-sm font-semibold ${
+                          r.correct ? "text-emerald-300" : "text-red-300"
+                        }`}
+                      >
+                        {r.correct ? "正解" : "不正解"}
+                      </span>
+                    </div>
+                    <div className="text-lg font-semibold text-neutral-100">{r.kanji}</div>
+                    <div className="mt-2">
+                      <div className="text-xs text-neutral-400">あなたの回答</div>
+                      <div className={r.correct ? "text-emerald-200 font-medium" : "text-red-200 font-medium"}>
+                        {r.answer || "(空)"}
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <div className="text-xs text-neutral-400">正しい読み</div>
+                      <div className="text-neutral-100 font-medium">{r.expected}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </details>
           </div>
