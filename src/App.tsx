@@ -266,7 +266,7 @@ export default function YojijukugoDrill() {
                 正解 <span className="font-semibold text-emerald-400">{correctCount}</span>
                 <span className="mx-1 text-neutral-500">/</span>
                 <span className="font-semibold text-neutral-100">{total}</span>
-              </div>
+                </div>
             </div>
 
             {/* 間違い一覧 */}
