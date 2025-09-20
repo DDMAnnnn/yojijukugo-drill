@@ -186,7 +186,7 @@ export default function YojijukugoDrill() {
         <header className="app__header">
           <h1 className="app__title">四字熟語ドリル（読み当て）</h1>
           <p className="app__subtitle">
-            出題範囲（1〜x）から k 個をランダム出題。読み（ひらがな）を完全一致で判定します。
+            出題範囲（＃1〜＃x）から k 個をランダム出題。読み（ひらがな）を完全一致で判定します。
           </p>
         </header>
 
@@ -217,7 +217,7 @@ export default function YojijukugoDrill() {
               </div>
               <div className="settings-grid__actions">
                 <button onClick={startQuiz} className="button button--primary">
-                  Start
+                  開始
                 </button>
               </div>
             </div>
@@ -234,7 +234,7 @@ export default function YojijukugoDrill() {
                 <span className="quiz-meta__count">
                   {pos + 1} / {indices.length}
                 </span>
-                <span className="quiz-meta__message">現在の問題に集中しましょう！</span>
+                <span className="quiz-meta__message">問題に集中しましょう！</span>
               </div>
               <button onClick={resetAll} className="button button--ghost">
                 リセット
@@ -390,7 +390,7 @@ export default function YojijukugoDrill() {
         )}
 
         <footer className="app__footer">
-          <p>読みの比較は「カタカナ→ひらがな」「空白削除」の正規化後に厳密一致です。</p>
+          <p>読みの比較は「カタカナ→ひらがな」と「空白削除」の後に判定されです。</p>
         </footer>
       </div>
     </div>
