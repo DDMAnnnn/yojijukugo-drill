@@ -23,6 +23,7 @@ body {
 .app__wrapper {
   width: 100%;
   max-width: 64rem;
+  margin: 0 auto;
 }
 
 .app__header {
