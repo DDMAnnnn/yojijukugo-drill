@@ -84,21 +84,12 @@ const IDIOMS: { kanji: string; reading: string }[] = [ { kanji: "悪口雑言", 
 
 // --- ユーティリティ：入力正規化（空白除去・全半角統一・カタカナ→ひらがな） ---
 function toHiragana(str: string): string {
-  // 全角→半角の一部、全角スペース除去
-  let s = str
-    .trim()
-    .replace(/\s+/g, "")
-    .replace(/[\u3000]/g, "");
-  // カタカナ → ひらがな（Unicode: カタカナ 0x30A1-0x30F6 を 0x3041-0x3096 に）
-  s = s.replace(/[\u30A1-\u30F6]/g, (m) =>
-    String.fromCharCode(m.charCodeAt(0) - 0x60)
-  );
-  // 長音記号のゆるい扱い（例: おう = おー） → ここではそのまま一致評価（厳密）
+  let s = str.trim().replace(/\s+/g, "").replace(/[\u3000]/g, "");
+  s = s.replace(/[\u30A1-\u30F6]/g, (m) => String.fromCharCode(m.charCodeAt(0) - 0x60));
   return s;
 }
 
 function sampleWithoutReplacement(n: number, k: number): number[] {
-  // 0..n-1 から k 個を無作為抽出
   const arr = Array.from({ length: n }, (_, i) => i);
   for (let i = n - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -115,8 +106,8 @@ interface ResultItem {
 }
 
 export default function YojijukugoDrill() {
-  const [x, setX] = useState(10); // 出題範囲上限（1〜x）
-  const [k, setK] = useState(5);  // 出題数
+  const [x, setX] = useState(10);
+  const [k, setK] = useState(5);
   const [indices, setIndices] = useState<number[]>([]);
   const [pos, setPos] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -127,9 +118,7 @@ export default function YojijukugoDrill() {
   const maxN = IDIOMS.length;
 
   useEffect(() => {
-    if (started && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (started && inputRef.current) inputRef.current.focus();
   }, [started, pos]);
 
   const current = useMemo(() => {
@@ -156,21 +145,14 @@ export default function YojijukugoDrill() {
     const ok = normalized === expected;
     setResults((prev) => [
       ...prev,
-      {
-        kanji: current.kanji,
-        expected,
-        answer, // 生の表示も残す
-        correct: ok,
-      },
+      { kanji: current.kanji, expected, answer, correct: ok },
     ]);
     setAnswer("");
     setPos((p) => p + 1);
   }
 
   function handleKey(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      submitOne();
-    }
+    if (e.key === "Enter") submitOne();
   }
 
   function resetAll() {
@@ -187,10 +169,10 @@ export default function YojijukugoDrill() {
   const score = total > 0 ? Math.round((100 * correctCount) / total) : 0;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex justify-center p-6">
-      <div className="w-full max-w-3xl">
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex justify-center items-center p-6">
+      <div className="w-full max-w-3xl text-center">
         <header className="mb-6">
-          <h1 className="text-2xl font-bold">四字熟語ドリル（読み当て）</h1>
+          <h1 className="text-3xl font-bold">四字熟語ドリル（読み当て）</h1>
           <p className="text-sm text-neutral-300 mt-1">
             出題範囲（1〜x）から k 個をランダム出題。読み（ひらがな）を完全一致で判定します。
           </p>
@@ -198,7 +180,7 @@ export default function YojijukugoDrill() {
 
         {/* 設定カード */}
         {!started && (
-          <div className="bg-neutral-900 rounded-2xl p-4 shadow">
+          <div className="bg-neutral-900 rounded-2xl p-6 shadow mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
               <div>
                 <label className="block text-sm text-neutral-300 mb-1">範囲上限 x（1〜{maxN}）</label>
@@ -239,7 +221,7 @@ export default function YojijukugoDrill() {
 
         {/* 出題ビュー */}
         {started && !finished && current && (
-          <div className="bg-neutral-900 rounded-2xl p-5 shadow mt-4">
+          <div className="bg-neutral-900 rounded-2xl p-6 shadow mt-4 mx-auto">
             <div className="flex items-center justify-between mb-4">
               <div className="text-sm text-neutral-400">{pos + 1} / {indices.length}</div>
               <button onClick={resetAll} className="text-sm text-neutral-300 hover:text-white">リセット</button>
@@ -271,17 +253,19 @@ export default function YojijukugoDrill() {
 
         {/* 結果ビュー */}
         {finished && (
-          <div className="bg-neutral-900 rounded-2xl p-5 shadow mt-4">
+          <div className="bg-neutral-900 rounded-2xl p-6 shadow mt-4 mx-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">結果</h2>
               <button onClick={resetAll} className="text-sm text-neutral-300 hover:text-white">もう一度</button>
             </div>
             <div className="mb-4">
-              <div className="text-3xl font-extrabold">
-                {score} <span className="text-lg font-semibold">/ 100 点</span>
+              <div className={`text-3xl font-extrabold ${score >= 80 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-red-400"}`}>
+                {score} <span className="text-lg font-semibold text-neutral-200">/ 100 点</span>
               </div>
               <div className="text-neutral-300 mt-1">
-                正解 {correctCount} / {total}
+                正解 <span className="font-semibold text-emerald-400">{correctCount}</span>
+                <span className="mx-1 text-neutral-500">/</span>
+                <span className="font-semibold text-neutral-100">{total}</span>
               </div>
             </div>
 
@@ -292,20 +276,20 @@ export default function YojijukugoDrill() {
                 <p className="text-emerald-400">全問正解！お見事です 🎉</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="text-left text-neutral-300">
+                  <table className="w-full text-sm mx-auto border border-neutral-800 rounded-xl overflow-hidden">
+                    <thead className="text-left text-neutral-300 bg-neutral-900">
                       <tr>
-                        <th className="py-2 pr-3">漢字</th>
-                        <th className="py-2 pr-3">あなたの回答</th>
-                        <th className="py-2 pr-3">正しい読み</th>
+                        <th className="py-2 px-3 border border-neutral-800">漢字</th>
+                        <th className="py-2 px-3 border border-neutral-800">あなたの回答</th>
+                        <th className="py-2 px-3 border border-neutral-800">正しい読み</th>
                       </tr>
                     </thead>
                     <tbody>
                       {results.filter((r) => !r.correct).map((r, i) => (
-                        <tr key={i} className="border-t border-neutral-800">
-                          <td className="py-2 pr-3 font-medium">{r.kanji}</td>
-                          <td className="py-2 pr-3 text-red-300">{r.answer || "(空)"}</td>
-                          <td className="py-2 pr-3 text-emerald-300">{r.expected}</td>
+                        <tr key={i} className="odd:bg-neutral-950 even:bg-neutral-900">
+                          <td className="py-2 px-3 border border-neutral-800 font-medium">{r.kanji}</td>
+                          <td className="py-2 px-3 border border-neutral-800 text-red-300">{r.answer || "(空)"}</td>
+                          <td className="py-2 px-3 border border-neutral-800 text-emerald-300">{r.expected}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -318,26 +302,24 @@ export default function YojijukugoDrill() {
             <details className="mt-5">
               <summary className="cursor-pointer text-neutral-300">全回答を表示</summary>
               <div className="overflow-x-auto mt-2">
-                <table className="w-full text-sm">
-                  <thead className="text-left text-neutral-300">
+                <table className="w-full text-sm mx-auto border border-neutral-800 rounded-xl overflow-hidden">
+                  <thead className="text-left text-neutral-300 bg-neutral-900">
                     <tr>
-                      <th className="py-2 pr-3">#</th>
-                      <th className="py-2 pr-3">漢字</th>
-                      <th className="py-2 pr-3">あなたの回答</th>
-                      <th className="py-2 pr-3">正誤</th>
-                      <th className="py-2 pr-3">正しい読み</th>
+                      <th className="py-2 px-3 border border-neutral-800">#</th>
+                      <th className="py-2 px-3 border border-neutral-800">漢字</th>
+                      <th className="py-2 px-3 border border-neutral-800">あなたの回答</th>
+                      <th className="py-2 px-3 border border-neutral-800">正誤</th>
+                      <th className="py-2 px-3 border border-neutral-800">正しい読み</th>
                     </tr>
                   </thead>
                   <tbody>
                     {results.map((r, i) => (
-                      <tr key={i} className="border-t border-neutral-800">
-                        <td className="py-2 pr-3">{i + 1}</td>
-                        <td className="py-2 pr-3 font-medium">{r.kanji}</td>
-                        <td className="py-2 pr-3">{r.answer || "(空)"}</td>
-                        <td className={`py-2 pr-3 ${r.correct ? "text-emerald-400" : "text-red-400"}`}>
-                          {r.correct ? "○" : "×"}
-                        </td>
-                        <td className="py-2 pr-3">{r.expected}</td>
+                      <tr key={i} className="odd:bg-neutral-950 even:bg-neutral-900">
+                        <td className="py-2 px-3 border border-neutral-800">{i + 1}</td>
+                        <td className="py-2 px-3 border border-neutral-800 font-medium">{r.kanji}</td>
+                        <td className={`py-2 px-3 border border-neutral-800 ${r.correct ? "text-emerald-300" : "text-red-300"}`}>{r.answer || "(空)"}</td>
+                        <td className={`py-2 px-3 border border-neutral-800 font-bold ${r.correct ? "text-emerald-400" : "text-red-400"}`}>{r.correct ? "○" : "×"}</td>
+                        <td className="py-2 px-3 border border-neutral-800">{r.expected}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -347,7 +329,7 @@ export default function YojijukugoDrill() {
           </div>
         )}
 
-        <footer className="text-xs text-neutral-500 mt-8">
+        <footer className="text-xs text-neutral-500 mt-8 text-center">
           <p>読みの比較は「カタカナ→ひらがな」「空白削除」の正規化後に厳密一致です。</p>
         </footer>
       </div>
