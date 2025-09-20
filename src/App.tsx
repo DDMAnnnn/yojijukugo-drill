@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
+import "./App.css";
 
 /**
  * 四字熟語 学習ページ
@@ -172,79 +173,77 @@ export default function YojijukugoDrill() {
   );
   const score = total > 0 ? Math.round((100 * correctCount) / total) : 0;
 
+  const scoreClass =
+    score >= 80
+      ? "score-display__value answer--correct"
+      : score >= 50
+        ? "score-display__value score-display__value--warning"
+        : "score-display__value answer--incorrect";
+
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-4xl">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">四字熟語ドリル（読み当て）</h1>
-          <p className="text-sm text-neutral-300 mt-2">
+    <div className="app">
+      <div className="app__wrapper">
+        <header className="app__header">
+          <h1 className="app__title">四字熟語ドリル（読み当て）</h1>
+          <p className="app__subtitle">
             出題範囲（1〜x）から k 個をランダム出題。読み（ひらがな）を完全一致で判定します。
           </p>
         </header>
 
-        {/* 設定カード */}
         {!started && (
-          <div className="bg-neutral-900/80 backdrop-blur rounded-3xl p-8 shadow-xl border border-neutral-800 mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-end text-left">
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-neutral-400 mb-2">
-                  範囲上限 x（1〜{maxN}）
-                </label>
+          <div className="card card--settings">
+            <div className="settings-grid">
+              <div className="field">
+                <label className="field__label">範囲上限 x（1〜{maxN}）</label>
                 <input
                   type="number"
                   min={1}
                   max={maxN}
                   value={x}
                   onChange={(e) => setX(Number(e.target.value))}
-                  className="w-full bg-neutral-800/70 border border-neutral-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="field__input"
                 />
               </div>
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-neutral-400 mb-2">出題数 k</label>
+              <div className="field">
+                <label className="field__label">出題数 k</label>
                 <input
                   type="number"
                   min={1}
                   max={maxN}
                   value={k}
                   onChange={(e) => setK(Number(e.target.value))}
-                  className="w-full bg-neutral-800/70 border border-neutral-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="field__input"
                 />
               </div>
-              <div className="sm:pt-8">
-                <button
-                  onClick={startQuiz}
-                  className="w-full bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 transition rounded-xl px-4 py-3 font-semibold shadow"
-                >
+              <div className="settings-grid__actions">
+                <button onClick={startQuiz} className="button button--primary">
                   Start
                 </button>
               </div>
             </div>
-            <p className="text-xs text-neutral-400 mt-6 text-center">
+            <p className="hint">
               ヒント：x ≤ {maxN}、k ≤ x に自動調整されます。問題は同じ回で重複しません。
             </p>
           </div>
         )}
 
-        {/* 出題ビュー */}
         {started && !finished && current && (
-          <div className="bg-neutral-900/80 backdrop-blur rounded-3xl p-8 shadow-xl border border-neutral-800 mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 text-sm text-neutral-400">
-              <div className="flex items-center gap-3">
-                <span className="px-2 py-1 rounded-lg bg-neutral-800 text-neutral-200 font-semibold">
+          <div className="card card--quiz">
+            <div className="quiz-header">
+              <div className="quiz-meta">
+                <span className="quiz-meta__count">
                   {pos + 1} / {indices.length}
                 </span>
-                <span>現在の問題に集中しましょう！</span>
+                <span className="quiz-meta__message">現在の問題に集中しましょう！</span>
               </div>
-              <button onClick={resetAll} className="self-start sm:self-auto text-neutral-300 hover:text-white transition">
+              <button onClick={resetAll} className="button button--ghost">
                 リセット
               </button>
             </div>
-            <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center rounded-2xl border border-neutral-700 bg-neutral-900 px-10 py-6 shadow-inner">
-                <div className="text-4xl sm:text-5xl font-bold tracking-wide text-white drop-shadow">{current.kanji}</div>
-              </div>
+            <div className="quiz-prompt">
+              <div className="quiz-kanji">{current.kanji}</div>
             </div>
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4">
+            <div className="quiz-actions">
               <input
                 ref={inputRef}
                 type="text"
@@ -252,80 +251,73 @@ export default function YojijukugoDrill() {
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 onKeyDown={handleKey}
-                className="w-full bg-neutral-800/70 border border-neutral-700 rounded-xl px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-indigo-400"
+                className="field__input field__input--answer"
                 autoCapitalize="none"
                 autoComplete="off"
               />
-              <button
-                onClick={submitOne}
-                className="bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 transition rounded-xl px-8 py-3 font-semibold text-white shadow"
-              >
+              <button onClick={submitOne} className="button button--confirm">
                 決定 / Enter
               </button>
             </div>
           </div>
         )}
 
-        {/* 結果ビュー */}
         {finished && (
-          <div className="bg-neutral-900/80 backdrop-blur rounded-3xl p-8 shadow-xl border border-neutral-800 mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="card card--results">
+            <div className="results-header">
               <div>
-                <h2 className="text-2xl font-bold">結果</h2>
-                <p className="text-sm text-neutral-400 mt-1">正解率と回答内容をチェックしましょう。</p>
+                <h2 className="results-title">結果</h2>
+                <p className="results-subtitle">正解率と回答内容をチェックしましょう。</p>
               </div>
-              <button onClick={resetAll} className="text-sm text-neutral-300 hover:text-white transition">もう一度</button>
+              <button onClick={resetAll} className="button button--ghost">
+                もう一度
+              </button>
             </div>
-            <div className="mb-6">
-              <div
-                className={`text-4xl font-black tracking-tight ${
-                  score >= 80 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-red-400"
-                }`}
-              >
+            <div className="score-display">
+              <div className={scoreClass}>
                 {score}
-                <span className="text-lg font-semibold text-neutral-200 ml-2">/ 100 点</span>
+                <span className="score-display__suffix">/ 100 点</span>
               </div>
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                <div className="rounded-2xl border border-emerald-600/60 bg-emerald-500/10 px-4 py-3 text-center">
-                  <div className="text-xs uppercase tracking-wide text-emerald-300">正解</div>
-                  <div className="text-2xl font-bold text-emerald-400">{correctCount}</div>
+              <div className="result-grid">
+                <div className="result-grid__item result-grid__item--correct">
+                  <div className="result-grid__label">正解</div>
+                  <div className="result-grid__value answer--correct">{correctCount}</div>
                 </div>
-                <div className="rounded-2xl border border-red-600/60 bg-red-500/10 px-4 py-3 text-center">
-                  <div className="text-xs uppercase tracking-wide text-red-300">不正解</div>
-                  <div className="text-2xl font-bold text-red-400">{incorrectResults.length}</div>
+                <div className="result-grid__item result-grid__item--incorrect">
+                  <div className="result-grid__label">不正解</div>
+                  <div className="result-grid__value answer--incorrect">{incorrectResults.length}</div>
                 </div>
-                <div className="rounded-2xl border border-indigo-600/60 bg-indigo-500/10 px-4 py-3 text-center col-span-2 sm:col-span-1">
-                  <div className="text-xs uppercase tracking-wide text-indigo-300">出題数</div>
-                  <div className="text-2xl font-bold text-indigo-200">{total}</div>
+                <div className="result-grid__item">
+                  <div className="result-grid__label">出題数</div>
+                  <div className="result-grid__value">{total}</div>
                 </div>
-                <div className="rounded-2xl border border-neutral-700 px-4 py-3 text-center col-span-2 sm:col-span-1">
-                  <div className="text-xs uppercase tracking-wide text-neutral-400">正解率</div>
-                  <div className="text-2xl font-bold text-neutral-100">{total ? Math.round((correctCount / total) * 100) : 0}%</div>
+                <div className="result-grid__item">
+                  <div className="result-grid__label">正解率</div>
+                  <div className="result-grid__value">{total ? Math.round((correctCount / total) * 100) : 0}%</div>
                 </div>
               </div>
             </div>
 
-            {/* 間違い一覧 */}
-            <div>
-              <h3 className="font-semibold mb-3 text-lg">間違えた問題</h3>
+            <div className="mistakes">
+              <h3 className="mistakes__title">間違えた問題</h3>
               {incorrectResults.length === 0 ? (
-                <p className="text-emerald-400">全問正解！お見事です 🎉</p>
+                <p className="message message--success">全問正解！お見事です 🎉</p>
               ) : (
-                <div className="overflow-x-auto rounded-2xl border border-neutral-800">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-neutral-900/80 text-neutral-300">
+                <div className="table-wrapper">
+                  <table className="data-table">
+                    <thead>
                       <tr>
-                        <th className="py-3 px-4 border-b border-neutral-800">漢字</th>
-                        <th className="py-3 px-4 border-b border-neutral-800">あなたの回答</th>
-                        <th className="py-3 px-4 border-b border-neutral-800">正しい読み</th>
+                        <th scope="col">漢字</th>
+                        <th scope="col">あなたの回答</th>
+                        <th scope="col">正しい読み</th>
                       </tr>
                     </thead>
                     <tbody>
                       {incorrectResults.map((r, i) => (
-                        <tr key={i} className="odd:bg-neutral-950 even:bg-neutral-900/70">
-                          <td className="py-3 px-4 border-b border-neutral-800 font-medium text-neutral-100">{r.kanji}</td>
-                          <td className="py-3 px-4 border-b border-neutral-800 text-red-300">{r.answer || "(空)"}</td>
-                          <td className="py-3 px-4 border-b border-neutral-800 text-emerald-300">{r.expected}</td>
+                        <tr key={i}>
+                          <td className="data-table__cell data-table__cell--strong">{r.kanji}</td>
+                          <td className="data-table__cell answer--incorrect">{r.answer || "(空)"}</td>
+                          <td className="data-table__cell answer--correct">{r.expected}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -334,78 +326,61 @@ export default function YojijukugoDrill() {
               )}
             </div>
 
-            {/* 全体一覧（任意） */}
-            <details className="mt-8 group">
-              <summary className="cursor-pointer text-neutral-300 flex items-center gap-2">
-                <span className="group-open:rotate-90 transition-transform">▶</span>
+            <details className="answers">
+              <summary className="answers__summary">
+                <span className="answers__icon" aria-hidden>▶</span>
                 <span>全回答を表示</span>
               </summary>
-              <div className="overflow-x-auto mt-3 rounded-2xl border border-neutral-800">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-neutral-900/80 text-neutral-300">
+              <div className="table-wrapper">
+                <table className="data-table">
+                  <thead>
                     <tr>
-                      <th className="py-3 px-4 border-b border-neutral-800">#</th>
-                      <th className="py-3 px-4 border-b border-neutral-800">漢字</th>
-                      <th className="py-3 px-4 border-b border-neutral-800">あなたの回答</th>
-                      <th className="py-3 px-4 border-b border-neutral-800">正誤</th>
-                      <th className="py-3 px-4 border-b border-neutral-800">正しい読み</th>
+                      <th scope="col">#</th>
+                      <th scope="col">漢字</th>
+                      <th scope="col">あなたの回答</th>
+                      <th scope="col">正誤</th>
+                      <th scope="col">正しい読み</th>
                     </tr>
                   </thead>
                   <tbody>
                     {results.map((r, i) => (
-                      <tr key={i} className="odd:bg-neutral-950 even:bg-neutral-900/70">
-                        <td className="py-3 px-4 border-b border-neutral-800 text-neutral-400">{i + 1}</td>
-                        <td className="py-3 px-4 border-b border-neutral-800 font-medium text-neutral-100">{r.kanji}</td>
-                        <td
-                          className={`py-3 px-4 border-b border-neutral-800 ${
-                            r.correct ? "text-emerald-300" : "text-red-300"
-                          }`}
-                        >
+                      <tr key={i}>
+                        <td className="data-table__cell data-table__cell--muted">{i + 1}</td>
+                        <td className="data-table__cell data-table__cell--strong">{r.kanji}</td>
+                        <td className={`data-table__cell ${r.correct ? "answer--correct" : "answer--incorrect"}`}>
                           {r.answer || "(空)"}
                         </td>
                         <td
-                          className={`py-3 px-4 border-b border-neutral-800 font-bold ${
-                            r.correct ? "text-emerald-400" : "text-red-400"
+                          className={`data-table__cell data-table__cell--status ${
+                            r.correct ? "answer--correct" : "answer--incorrect"
                           }`}
                         >
                           {r.correct ? "○" : "×"}
                         </td>
-                        <td className="py-3 px-4 border-b border-neutral-800 text-neutral-200">{r.expected}</td>
+                        <td className="data-table__cell">{r.expected}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+              <div className="answer-cards">
                 {results.map((r, i) => (
                   <div
                     key={`${r.kanji}-${i}`}
-                    className={`rounded-2xl border px-4 py-3 shadow-sm ${
-                      r.correct
-                        ? "border-emerald-500/60 bg-emerald-500/10"
-                        : "border-red-500/60 bg-red-500/10"
-                    }`}
+                    className={`answer-card ${r.correct ? "answer--correct" : "answer--incorrect"}`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs uppercase tracking-wide text-neutral-400">#{i + 1}</span>
-                      <span
-                        className={`text-sm font-semibold ${
-                          r.correct ? "text-emerald-300" : "text-red-300"
-                        }`}
-                      >
-                        {r.correct ? "正解" : "不正解"}
-                      </span>
+                    <div className="answer-card__header">
+                      <span className="answer-card__number">#{i + 1}</span>
+                      <span className="answer-card__status">{r.correct ? "正解" : "不正解"}</span>
                     </div>
-                    <div className="text-lg font-semibold text-neutral-100">{r.kanji}</div>
-                    <div className="mt-2">
-                      <div className="text-xs text-neutral-400">あなたの回答</div>
-                      <div className={r.correct ? "text-emerald-200 font-medium" : "text-red-200 font-medium"}>
-                        {r.answer || "(空)"}
-                      </div>
+                    <div className="answer-card__kanji">{r.kanji}</div>
+                    <div className="answer-card__section">
+                      <div className="answer-card__label">あなたの回答</div>
+                      <div className="answer-card__value">{r.answer || "(空)"}</div>
                     </div>
-                    <div className="mt-2">
-                      <div className="text-xs text-neutral-400">正しい読み</div>
-                      <div className="text-neutral-100 font-medium">{r.expected}</div>
+                    <div className="answer-card__section">
+                      <div className="answer-card__label">正しい読み</div>
+                      <div className="answer-card__value answer-card__value--expected">{r.expected}</div>
                     </div>
                   </div>
                 ))}
@@ -414,7 +389,7 @@ export default function YojijukugoDrill() {
           </div>
         )}
 
-        <footer className="text-xs text-neutral-500 mt-8 text-center">
+        <footer className="app__footer">
           <p>読みの比較は「カタカナ→ひらがな」「空白削除」の正規化後に厳密一致です。</p>
         </footer>
       </div>
