@@ -5,7 +5,7 @@ import "./App.css";
  * 四字熟語 学習ページ
  * ---------------------------------------------
  * • 下の `IDIOMS` 配列に 133 個の { kanji, reading } を入れてください（reading は ひらがな）。
- * • 画面上部で x（出題範囲: 1〜x）と k（出題数）を入力 → Start でランダム出題。
+ * • 画面上部で 出題範囲（開始・終了）と k（出題数）を入力 → Start でランダム出題。
  * • 完全一致（ひらがな・全半角／カタカナ→ひらがな正規化後）で正解。
  * • 最後に間違い一覧と採点を表示します。
  *
@@ -90,9 +90,9 @@ function toHiragana(str: string): string {
   return s;
 }
 
-function sampleWithoutReplacement(n: number, k: number): number[] {
-  const arr = Array.from({ length: n }, (_, i) => i);
-  for (let i = n - 1; i > 0; i--) {
+function sampleWithoutReplacement<T>(source: T[], k: number): T[] {
+  const arr = [...source];
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
@@ -106,8 +106,14 @@ interface ResultItem {
   correct: boolean;
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 export default function YojijukugoDrill() {
-  const [x, setX] = useState(10);
+  const maxN = IDIOMS.length;
+  const [rangeStart, setRangeStart] = useState(1);
+  const [rangeEnd, setRangeEnd] = useState(() => Math.min(10, maxN));
   const [k, setK] = useState(5);
   const [indices, setIndices] = useState<number[]>([]);
   const [pos, setPos] = useState(0);
@@ -116,7 +122,14 @@ export default function YojijukugoDrill() {
   const [started, setStarted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const maxN = IDIOMS.length;
+  const normalizedRange = useMemo(() => {
+    const clampedStart = clamp(rangeStart, 1, maxN);
+    const clampedEnd = clamp(rangeEnd, 1, maxN);
+    return {
+      start: Math.min(clampedStart, clampedEnd),
+      end: Math.max(clampedStart, clampedEnd),
+    };
+  }, [rangeStart, rangeEnd, maxN]);
 
   useEffect(() => {
     if (started && inputRef.current) inputRef.current.focus();
@@ -129,9 +142,16 @@ export default function YojijukugoDrill() {
   }, [started, pos, indices]);
 
   function startQuiz() {
-    const safeX = Math.max(1, Math.min(x, maxN));
-    const safeK = Math.max(1, Math.min(k, safeX));
-    const pool = sampleWithoutReplacement(safeX, safeK);
+    const clampedStart = clamp(rangeStart, 1, maxN);
+    const clampedEnd = clamp(rangeEnd, 1, maxN);
+    const start = Math.min(clampedStart, clampedEnd);
+    const end = Math.max(clampedStart, clampedEnd);
+    const rangeSize = end - start + 1;
+    const safeK = Math.max(1, Math.min(k, rangeSize));
+    const rangeIndices = Array.from({ length: rangeSize }, (_, i) => start - 1 + i);
+    const pool = sampleWithoutReplacement(rangeIndices, safeK);
+    setRangeStart(start);
+    setRangeEnd(end);
     setIndices(pool);
     setResults([]);
     setPos(0);
@@ -186,7 +206,8 @@ export default function YojijukugoDrill() {
         <header className="app__header">
           <h1 className="app__title">四字熟語ドリル（読み当て）</h1>
           <p className="app__subtitle">
-            出題範囲（＃1〜＃x）から k 個をランダム出題。読み（ひらがな）を完全一致で判定します。
+            出題範囲（＃{normalizedRange.start}〜＃{normalizedRange.end}）から k 個をランダム出題。
+            読み（ひらがな）を完全一致で判定します。
           </p>
         </header>
 
@@ -194,13 +215,24 @@ export default function YojijukugoDrill() {
           <div className="card card--settings">
             <div className="settings-grid">
               <div className="field">
-                <label className="field__label">範囲上限 x（1〜{maxN}）</label>
+                <label className="field__label">範囲下限（1〜{maxN}）</label>
                 <input
                   type="number"
                   min={1}
                   max={maxN}
-                  value={x}
-                  onChange={(e) => setX(Number(e.target.value))}
+                  value={rangeStart}
+                  onChange={(e) => setRangeStart(clamp(Number(e.target.value), 1, maxN))}
+                  className="field__input"
+                />
+              </div>
+              <div className="field">
+                <label className="field__label">範囲上限（1〜{maxN}）</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={maxN}
+                  value={rangeEnd}
+                  onChange={(e) => setRangeEnd(clamp(Number(e.target.value), 1, maxN))}
                   className="field__input"
                 />
               </div>
@@ -222,7 +254,8 @@ export default function YojijukugoDrill() {
               </div>
             </div>
             <p className="hint">
-              ヒント：x ≤ {maxN}、k ≤ x に自動調整されます。問題は同じ回で重複しません。
+              ヒント：範囲は 1〜{maxN} に収まり、開始＞終了なら自動的に入れ替わります。k も範囲内に
+              調整され、問題は同じ回で重複しません。
             </p>
           </div>
         )}
