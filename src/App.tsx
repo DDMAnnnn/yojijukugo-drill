@@ -221,7 +221,11 @@ export default function YojijukugoDrill() {
                   min={1}
                   max={maxN}
                   value={rangeStart}
-                  onChange={(e) => setRangeStart(clamp(Number(e.target.value), 1, maxN))}
+                  onChange={(e) => {
+                    const nextValue = Number(e.target.value);
+                    if (Number.isNaN(nextValue)) return;
+                    setRangeStart(nextValue);
+                  }}
                   className="field__input"
                 />
               </div>
@@ -232,7 +236,11 @@ export default function YojijukugoDrill() {
                   min={1}
                   max={maxN}
                   value={rangeEnd}
-                  onChange={(e) => setRangeEnd(clamp(Number(e.target.value), 1, maxN))}
+                  onChange={(e) => {
+                    const nextValue = Number(e.target.value);
+                    if (Number.isNaN(nextValue)) return;
+                    setRangeEnd(nextValue);
+                  }}
                   className="field__input"
                 />
               </div>
